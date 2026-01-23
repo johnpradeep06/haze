@@ -69,7 +69,7 @@ export function BriefCard({ brief }: { brief: Brief }) {
         h-full
         flex
         flex-col
-        overflow-visible
+        overflow-hidden
         transition-all
         duration-300
         hover:-translate-y-1
@@ -79,7 +79,7 @@ export function BriefCard({ brief }: { brief: Brief }) {
       "
         >
             {/* HEADER */}
-            <CardHeader className="">
+            <CardHeader className="flex-shrink-0">
                 <div className="flex justify-between items-center mb-2">
                     <Badge
                         variant={brief.status === "open" ? "outline" : "secondary"}
@@ -99,7 +99,7 @@ export function BriefCard({ brief }: { brief: Brief }) {
             </CardHeader>
 
             {/* CONTENT */}
-            <CardContent className="flex-grow pt-6">
+            <CardContent className="flex-grow overflow-y-auto pt-6">
                 <div className="space-y-4">
                     <div>
                         <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-1">
