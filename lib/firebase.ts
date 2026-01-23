@@ -11,6 +11,11 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Check if API key is present
+if (!firebaseConfig.apiKey) {
+    console.warn("Firebase API key is missing. Check your environment variables.");
+}
+
 // Initialize Firebase (singleton pattern)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
