@@ -158,7 +158,7 @@ export default function BriefDetailPage() {
                     {/* Do's and Don'ts */}
                     <Card className="h-full border-zinc-200 dark:border-zinc-800">
                         <CardHeader>
-                            <CardTitle className="text-lg">Guidelines</CardTitle>
+                            <CardTitle className="text-lg">Guideline</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
