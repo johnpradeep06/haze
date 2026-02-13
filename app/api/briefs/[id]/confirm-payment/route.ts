@@ -21,7 +21,7 @@ export async function POST(
         // Validation
         if (!transactionId || !customerId) {
             return NextResponse.json(
-                { error: "Missing requred fields: transactionId, customerId" },
+                { error: "Missing required fields: transactionId, customerId" },
                 { status: 400 }
             );
         }
