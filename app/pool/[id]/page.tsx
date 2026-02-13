@@ -10,19 +10,10 @@ import { ArrowLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-// Extend Brief type with Firestore metadata
-interface FirestoreBrief extends Brief {
-    id: string;
-    status: string;
-    createdAt?: any;
-    designerId?: string;
-    assignedAt?: any;
-}
-
 export default function BriefDetailPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const [brief, setBrief] = useState<FirestoreBrief | null>(null);
+    const [brief, setBrief] = useState<(Brief & { id: string }) | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +26,7 @@ export default function BriefDetailPage() {
 
                 if (docSnap.exists()) {
                     // Cast to FirestoreBrief - assuming data matches structure
-                    setBrief({ id: docSnap.id, ...docSnap.data() } as FirestoreBrief);
+                    setBrief({ id: docSnap.id, ...docSnap.data() } as Brief & { id: string });
                 } else {
                     setError("Brief not found");
                 }

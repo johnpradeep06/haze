@@ -2,31 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, where, onSnapshot, or } from "firebase/firestore";
 import { BriefCard } from "@/components/pool/brief-card";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { useAuth } from "@/hooks/use-auth";
 
 import { Briefcase, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function PoolPage() {
+    const { user } = useAuth();
     const [briefs, setBriefs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showMyBriefs, setShowMyBriefs] = useState(false);
 
     useEffect(() => {
+        if (!user) return;
+
         setLoading(true);
         let q;
 
         if (showMyBriefs) {
-            // Fake user ID for now, as per brief-card.tsx
-            const fakeUserId = "designer-123";
+            // Show briefs assigned to this designer in any active state
             q = query(
                 collection(db, "briefs"),
-                where("designerId", "==", fakeUserId),
-                where("status", "==", "assigned")
+                where("designerId", "==", user.uid)
             );
         } else {
+            // Show only open briefs available for acceptance
             q = query(
                 collection(db, "briefs"),
                 where("status", "==", "open")
@@ -44,7 +47,7 @@ export default function PoolPage() {
         });
 
         return () => unsubscribe();
-    }, [showMyBriefs]);
+    }, [showMyBriefs, user]);
 
     return (
         <ProtectedRoute allowedRoles={['designer', 'admin']}>

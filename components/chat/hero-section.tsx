@@ -1,6 +1,10 @@
 import { motion } from "framer-motion";
 
-export function HeroSection() {
+interface HeroSectionProps {
+    onSuggestionClick?: (suggestion: string) => void;
+}
+
+export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
     return (
         <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[50vh] md:min-h-[400px] text-center p-4 md:p-6 space-y-6 md:space-y-8 animate-in fade-in zoom-in duration-700">
 
@@ -34,7 +38,8 @@ export function HeroSection() {
                     ].map((label, i) => (
                         <div
                             key={i}
-                            className="px-4 py-2 text-sm font-medium text-zinc-600 bg-white border border-zinc-200 rounded-full shadow-sm hover:bg-zinc-50 cursor-default transition-colors dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                            onClick={() => onSuggestionClick?.(label)}
+                            className="px-4 py-2 text-sm font-medium text-zinc-600 bg-white border border-zinc-200 rounded-full shadow-sm hover:bg-zinc-50 hover:border-zinc-300 cursor-pointer transition-all hover:shadow-md active:scale-95 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:hover:border-zinc-700"
                         >
                             {label}
                         </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Send, Menu, User, Sparkles, Mic } from "lucide-react";
+import { Send, Menu, User, Sparkles, Mic, FileText } from "lucide-react";
 
 import { Brief, ChatMsg, LlmNext } from "@/app/types/chat";
 import { extractCompanyNameSoft, firstLetter, toApiMessages } from "@/lib/chat-utils";
@@ -65,16 +65,25 @@ export default function Page() {
     setError(null);
 
     try {
+      const payload = {
+        messages: toApiMessages(messages),
+        answers: nextAnswers,
+        turn: nextTurn,
+        askedQuestions: nextAsked,
+        customerEmail: user?.email,
+        customerId: user?.uid,
+      };
+
+      console.log("[chat] Calling /api/llm-next with payload:", {
+        turn: nextTurn,
+        customerId: user?.uid,
+        customerEmail: user?.email,
+      });
+
       const res = await fetch("/api/llm-next", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: toApiMessages(messages), // Note: we might need to inject the initial greeting if we started empty
-          answers: nextAnswers,
-          turn: nextTurn,
-          askedQuestions: nextAsked,
-          customerEmail: user?.email,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const raw = await res.text();
@@ -90,11 +99,13 @@ export default function Page() {
       }
 
       const out = data as LlmNext;
+      console.log("[chat] Response from /api/llm-next:", { done: out.done, hasBrief: out.done && 'brief' in out });
 
       if (out.done) {
         setDone(true);
         setBrief(out.brief);
         setMessages((m) => [...m, { role: "assistant", text: "Done. Here is the brief." }]);
+        console.log("[chat] Brief completed and set:", out.brief);
       } else {
         const nextQ = out.question;
         setAskedQuestions((prev) => [...prev, nextQ]);
@@ -104,6 +115,7 @@ export default function Page() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
+      console.error("[chat] Error in callLlmNext:", msg);
       setMessages((m) => [...m, { role: "assistant", text: `Something broke: ${msg}` }]);
       scrollToBottom();
     } finally {
@@ -115,6 +127,7 @@ export default function Page() {
   }
 
   // Initial boot
+
   useEffect(() => {
     if (bootedRef.current) return;
     bootedRef.current = true;
@@ -193,6 +206,13 @@ export default function Page() {
 
   const userAvatarLetter = firstLetter(companyName);
 
+  // Handle suggestion chip clicks
+  const handleSuggestionClick = (suggestion: string) => {
+    setInput(suggestion);
+    // Focus the input field after setting the value
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-zinc-900 selection:bg-indigo-100 dark:bg-zinc-950 dark:text-zinc-100">
 
@@ -230,6 +250,10 @@ export default function Page() {
                 {user?.email || "No Email"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/my-briefs")} className="cursor-pointer">
+                <FileText className="mr-2 h-4 w-4" />
+                <span>My Briefs</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => signOut(auth)} className="text-red-500 hover:text-red-500 focus:text-red-500 cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
@@ -248,7 +272,7 @@ export default function Page() {
 
         {/* Conditional View: Hero vs Chat Stream */}
         {!hasStarted && messages.length === 0 ? (
-          <HeroSection />
+          <HeroSection onSuggestionClick={handleSuggestionClick} />
         ) : (
           <div className="flex-1 overflow-y-auto px-2 md:px-[20%] py-4 md:py-6 scroll-smooth">
             <div className="space-y-6 pb-32">

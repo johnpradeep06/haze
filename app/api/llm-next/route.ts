@@ -1,7 +1,7 @@
 
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
 
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
       turn?: number;
       askedQuestions?: string[];
       customerEmail?: string;
+      customerId?: string;
     };
 
     const messages = Array.isArray(body.messages) ? body.messages : [];
@@ -163,18 +164,22 @@ or:
 
     if (out.done === true) {
       console.log("[llm-next] interview completed", { turn, forcedDone });
+      console.log("[llm-next] Saving brief with customerId:", body.customerId, "customerEmail:", body.customerEmail);
       try {
-        const docRef = await addDoc(collection(db, "briefs"), {
+        const briefData = {
           ...out.brief,
+          customerId: body.customerId || null,
           customerEmail: body.customerEmail || null,
           status: "open",
-          createdAt: serverTimestamp(),
-        });
-        console.log("[llm-next] Brief saved with ID: ", docRef.id);
+          createdAt: FieldValue.serverTimestamp(),
+        };
+        console.log("[llm-next] Brief data to save:", JSON.stringify(briefData, null, 2));
+        const docRef = await adminDb.collection("briefs").add(briefData);
+        console.log("[llm-next] Brief saved successfully with ID:", docRef.id);
         // Enhance the response with the saved ID
         (out as any).briefId = docRef.id;
       } catch (error) {
-        console.error("[llm-next] Error adding brief to Firestore: ", error);
+        console.error("[llm-next] Error adding brief to Firestore:", error);
         // We don't fail the request, just log it, or you might want to return an error/warning
       }
     }

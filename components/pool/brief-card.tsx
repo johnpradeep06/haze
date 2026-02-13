@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { QuoteModal } from "./quote-modal";
 
 type Brief = {
     id: string;
@@ -27,39 +29,24 @@ type Brief = {
 export function BriefCard({ brief }: { brief: Brief }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showQuoteModal, setShowQuoteModal] = useState(false);
     const router = useRouter();
+    const { user } = useAuth();
 
     const handleAccept = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            await runTransaction(db, async (transaction) => {
-                const briefRef = doc(db, "briefs", brief.id);
-                const briefDoc = await transaction.get(briefRef);
-
-                if (!briefDoc.exists()) {
-                    throw new Error("Brief does not exist!");
-                }
-
-                const data = briefDoc.data();
-                if (data.status !== "open") {
-                    throw new Error("This brief has already been accepted.");
-                }
-
-                transaction.update(briefRef, {
-                    status: "assigned",
-                    designerId: "designer-123",
-                    assignedAt: new Date(),
-                });
-            });
-
-            router.push(`/pool/${brief.id}`);
-        } catch (e: any) {
-            setError(e.message || "Failed to accept brief");
-        } finally {
-            setLoading(false);
+        if (!user) {
+            setError("You must be logged in to accept briefs");
+            return;
         }
+
+        // Show quote modal immediately without updating status yet
+        // The status will be updated when the quote is submitted
+        setShowQuoteModal(true);
+    };
+
+    const handleQuoteSuccess = () => {
+        // After successful quote submission, navigate to brief detail
+        router.push(`/pool/${brief.id}`);
     };
 
     return (
@@ -129,26 +116,81 @@ export function BriefCard({ brief }: { brief: Brief }) {
                     </p>
                 )}
 
-                <div className="grid grid-cols-2 gap-2 w-full">
+                <div className="flex gap-2 w-full">
                     <Button
                         variant="outline"
                         onClick={() => router.push(`/pool/${brief.id}`)}
+                        className="flex-1"
                     >
                         View Details
                     </Button>
 
-                    <Button
-                        onClick={handleAccept}
-                        disabled={loading || brief.status !== "open"}
-                        variant={brief.status === "open" ? "default" : "secondary"}
-                    >
-                        {loading && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        {brief.status === "open" ? "Accept" : "Assigned"}
-                    </Button>
+                    {brief.status === "open" ? (
+                        <Button
+                            onClick={handleAccept}
+                            disabled={loading}
+                            className="flex-1"
+                        >
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Accept
+                        </Button>
+                    ) : brief.status === "quote_confirmed" || brief.status === "draft_1_reviewed" ? (
+                        <Button
+                            onClick={() => router.push(`/upload-draft/${brief.id}`)}
+                            className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600"
+                        >
+                            Upload Draft
+                        </Button>
+                    ) : brief.status === "quote_submitted" ? (
+                        <Button
+                            variant="secondary"
+                            disabled
+                            className="flex-1"
+                        >
+                            Awaiting Customer
+                        </Button>
+                    ) : brief.status === "draft_1_uploaded" || brief.status === "draft_2_uploaded" ? (
+                        <Button
+                            variant="secondary"
+                            disabled
+                            className="flex-1"
+                        >
+                            Draft Submitted
+                        </Button>
+                    ) : brief.status === "paid" ? (
+                        <Button
+                            variant="default"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            disabled
+                        >
+                            Payment Received
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="secondary"
+                            disabled
+                            className="flex-1"
+                        >
+                            {brief.status || "Assigned"}
+                        </Button>
+                    )}
                 </div>
             </CardFooter>
-        </Card>
+
+            {/* Quote Modal */}
+            {
+                user && (
+                    <QuoteModal
+                        open={showQuoteModal}
+                        onClose={() => setShowQuoteModal(false)}
+                        briefId={brief.id}
+                        designerId={user.uid}
+                        designerName={user.displayName || user.email || "Designer"}
+                        designerEmail={user.email || ""}
+                        onSuccess={handleQuoteSuccess}
+                    />
+                )
+            }
+        </Card >
     );
 }
