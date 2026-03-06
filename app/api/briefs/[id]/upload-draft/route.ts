@@ -95,7 +95,7 @@ export async function POST(
             api_secret: process.env.CLOUDINARY_API_SECRET,
         });
 
-        // Upload buffer to Cloudinary
+        // Upload buffer to Cloudinar
         const uploadResult = await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
