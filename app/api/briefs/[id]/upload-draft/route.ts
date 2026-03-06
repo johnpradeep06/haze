@@ -102,9 +102,7 @@ export async function POST(
                     folder: `briefs/${id}`,
                     resource_type: 'raw',
                     public_id: `draft${draftNumber}`,
-                    format: 'pdf',
-                    type: 'upload', // Make it publicly accessible
-                    access_mode: 'public', // Ensure public access
+                    type: 'upload',
                 },
                 (error: any, result: any) => {
                     if (error) reject(error);

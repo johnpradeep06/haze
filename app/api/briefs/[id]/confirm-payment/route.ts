@@ -25,7 +25,6 @@ export async function POST(
                 { status: 400 }
             );
         }
-
         // Get the brief
         const briefRef = doc(db, "briefs", id);
         const briefSnap = await getDoc(briefRef);

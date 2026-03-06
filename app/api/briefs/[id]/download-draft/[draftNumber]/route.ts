@@ -43,31 +43,8 @@ export async function GET(
             );
         }
 
-        // Fetch the PDF from Cloudinary
-        const response = await fetch(draftUrl);
-
-        console.log(`[download-draft] Cloudinary response status: ${response.status}`);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[download-draft] Cloudinary error: ${response.status} - ${errorText}`);
-            return NextResponse.json(
-                { error: "Failed to fetch PDF from Cloudinary", status: response.status, details: errorText },
-                { status: 500 }
-            );
-        }
-
-        const pdfBuffer = await response.arrayBuffer();
-
-        // Return the PDF with download headers
-        return new NextResponse(pdfBuffer, {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="${fileName || `draft${draftNumber}.pdf`}"`,
-                'Content-Length': pdfBuffer.byteLength.toString(),
-            },
-        });
+        // Redirect directly to the Cloudinary URL
+        return NextResponse.redirect(draftUrl);
     } catch (error: any) {
         console.error("[download-draft] Error:", error);
         return NextResponse.json(

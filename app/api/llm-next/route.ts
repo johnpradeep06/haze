@@ -126,7 +126,7 @@ or:
         "X-Title": "Merch Brief Assistant",
       },
       body: JSON.stringify({
-        model: "openai/gpt-4o-mini",
+        model: "arcee-ai/trinity-large-preview:free",
         messages: promptContext,
         temperature: 0.6,
         response_format: { type: "json_object" },
